@@ -1,0 +1,43 @@
+{
+  "name": "euclidean-rhythm",
+  "version": "1.0.0",
+  "description": "Euclidean rhythm experiment",
+  "main": "euclidean-rhythm.js",
+  "scripts": {
+    "build": "gulp",
+    "watch": "gulp watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dbkaplun/euclidean-rhythm.git"
+  },
+  "author": "Dan Kaplun <dbkaplun@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dbkaplun/euclidean-rhythm/issues"
+  },
+  "homepage": "https://github.com/dbkaplun/euclidean-rhythm#readme",
+  "dependencies": {
+    "bootstrap": "^3.3.5",
+    "midi": "mudcube/MIDI.js"
+  },
+  "devDependencies": {
+    "bluebird": "^3.0.5",
+    "browserify": "^12.0.1",
+    "cssnano": "^3.3.2",
+    "gulp": "^3.9.0",
+    "gulp-flatten": "^0.2.0",
+    "gulp-less": "^3.0.3",
+    "gulp-postcss": "^6.0.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^1.4.2",
+    "gulp-util": "^3.0.7",
+    "react": "^0.14.2",
+    "react-dom": "^0.14.2",
+    "reactify": "^1.1.1",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.6.0"
+  }
+}
