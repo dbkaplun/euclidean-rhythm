@@ -13,3 +13,12 @@
 > results can be obtained from the [Bresenham](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm) algorithm.
 
 ---[Wikipedia, *Euclidean rhythm*](https://en.wikipedia.org/wiki/Euclidean_rhythm)
+
+## Usage
+
+```js
+> var euclideanRhythm = require('euclidean-rhythm');
+undefined
+> euclideanRhythm(3, 8);
+[ true, false, false, true, false, false, true, false ]
+```
