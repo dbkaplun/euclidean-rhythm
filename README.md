@@ -12,7 +12,7 @@
 > The beats in the resulting rhythms are as equidistant as possible; the same
 > results can be obtained from the [Bresenham](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm) algorithm.
 
----[Wikipedia, *Euclidean rhythm*](https://en.wikipedia.org/wiki/Euclidean_rhythm)
+&mdash;[Wikipedia, *Euclidean rhythm*](https://en.wikipedia.org/wiki/Euclidean_rhythm)
 
 ## Usage
 
