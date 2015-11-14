@@ -1,6 +1,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var d3 = require('d3');
+var DoughnutChart = require('react-chartjs').Doughnut;
 
 var euclideanRhythm = require('./.');
 
@@ -8,7 +8,6 @@ var EuclideanRhythmDemo = React.createClass({
   getInitialState: function () {
     var width = 120;
     var height = 120;
-    var radius = Math.min(width, height) / 2;
     return {
       state: 'stop',
       rhythmIndex: -1,
@@ -25,22 +24,16 @@ var EuclideanRhythmDemo = React.createClass({
       },
 
       pieOpts: {
-        width: width,
-        height: height,
-        radius: radius,
-        outerRadius: radius*.9,
-        innerRadius: radius*.8,
-        transitionDuration: 20,
         onColor: '#555',
         offColor: '#ddd',
         playColor: '#c00',
-
-        arc: d3.svg.arc()
-          .outerRadius(radius*.9)
-          .innerRadius(radius*.8),
-        pie: d3.layout.pie()
-          .sort(null)
-          .value(function (d, i) { return 1; })
+        width: width,
+        height: height,
+        doughnutChartOptions: {
+          animateRotate: false,
+          showTooltips: false,
+          percentageInnerCutout: 80
+        }
       }
     };
   },
@@ -60,21 +53,6 @@ var EuclideanRhythmDemo = React.createClass({
     });
 
     self.addRhythm();
-  },
-  componentDidUpdate: function () {
-    var self = this;
-    var state = self.state;
-    var pieOpts = state.pieOpts;
-    state.rhythms.forEach(function (rhythm, i) {
-      var pieRef = self.refs['pie-'+i];
-      if (pieRef && !rhythm.pie) rhythm.pie = d3.select(pieRef).append('svg')
-        .attr('width', pieOpts.width)
-        .attr('height', pieOpts.height)
-      .append('g')
-        .attr('class', 'beats')
-        .attr('transform', 'translate(' + (pieOpts.width/2) + ',' + (pieOpts.height/2) + ')');
-    });
-    this.updatePies();
   },
   getBeats: function (rhythm) { return euclideanRhythm(rhythm.onNotes, rhythm.totalNotes); },
   getNextState: function () {
@@ -122,67 +100,29 @@ var EuclideanRhythmDemo = React.createClass({
     if (!match) throw new Error("unknown element '"+evt.target.name+"'");
     this.state.rhythms[Number(match[2])][match[1]] = Number(evt.target.value);
     this.setState({rhythms: this.state.rhythms});
-    this.stop();
   },
   addRhythm: function (evt) {
     var self = this;
     self.setState({rhythms: self.state.rhythms.concat([{
-      onNotes: 3,
+      onNotes: 4,
       totalNotes: 8
     }])});
   },
-  updatePies: function () {
+  removeRhythm: function (evt) {
     var self = this;
-    var state = self.state;
-    var pieOpts = state.pieOpts;
-    state.rhythms.forEach(function (rhythm, i) {
-      var pieRef = self.refs['pie-'+i];
-      if (pieRef && !rhythm.pie) rhythm.pie = d3.select(pieRef).append('svg')
-        .attr('width', pieOpts.width)
-        .attr('height', pieOpts.height)
-      .append('g')
-        .attr('class', 'beats')
-        .attr('transform', 'translate(' + (pieOpts.width/2) + ',' + (pieOpts.height/2) + ')');
-      self.updatePie(rhythm);
-    });
-    self.render();
-  },
-  updatePie: function (rhythm) {
-    if (!rhythm.pie) return;
+    var match = evt.currentTarget.name.match(/(\w+)-(\d+)/);
+    if (!match && match[1] !== 'removeRhythm') throw new Error("unknown element '"+evt.currentTarget.name+"'");
 
-    var self = this;
-    var state = self.state;
-    var pieOpts = state.pieOpts;
+    var i = Number(match[2]);
+    var rhythms = self.state.rhythms;
+    var removedRhythm = rhythms.splice(i, 1)[0];
 
-    var beats = self.getBeats(rhythm);
-    var slice = rhythm.pie.selectAll('.beat')
-      .data(pieOpts.pie(beats));
-
-    slice.enter()
-      .insert('path')
-      .attr('class', 'beat');
-
-    slice
-      .transition().duration(pieOpts.transitionDuration)
-      .attrTween('d', function (d) {
-        var interpolate = d3.interpolate(this._current || d, d);
-        this._current = interpolate(0);
-        return function (t) { return pieOpts.arc(interpolate(t)); };
-      })
-
-    slice.exit()
-      .remove();
-
-    slice.style('fill', function (d, i) {
-      return state.state === 'play' && (state.rhythmIndex % beats.length) === i
-        ? pieOpts.playColor
-        : d.data
-          ? pieOpts.onColor
-          : pieOpts.offColor;
-    });
+    self.setState({rhythms: rhythms});
   },
   render: function () {
     var self = this;
+    var state = self.state;
+    var pieOpts = state.pieOpts;
     return (
       <div>
         <div className="btn-group" role="group" aria-label="...">
@@ -193,25 +133,46 @@ var EuclideanRhythmDemo = React.createClass({
             <span className="glyphicon glyphicon-plus" aria-hidden="true"></span>
           </button>
         </div>
-        <div>{self.state.rhythms.map(function (rhythm, i) {
-          return (
-            <div className="row" key={i}>
-              <div className="col-xs-4">
-                <label htmlFor={'onNotes-'+i}>On notes</label>
-                <input name={'onNotes-'+i} value={rhythm.onNotes} onChange={self.onChange} type="number" step="1" min="0" max={rhythm.totalNotes} id={'onNotes-'+i} className="form-control" />
-                <p className="help-block">Total number of notes that will be played in the measure.</p>
-              </div>
-              <div className="col-xs-4">
-                <label htmlFor={'totalNotes-'+i}>Total notes</label>
-                <input name={'totalNotes-'+i} value={rhythm.totalNotes} onChange={self.onChange} type="number" step="1" min={rhythm.onNotes} max="64" id={'totalNotes-'+i} className="form-control" />
-                <p className="help-block">Total number of notes in a measure.</p>
-              </div>
-              <div className="col-xs-4">
-                <div ref={'pie-'+i} className="text-center"></div>
-              </div>
-            </div>
-          );
-        })}</div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th className="col-xs-1"></th>
+              <th>On notes</th>
+              <th>Total notes</th>
+              <th>Rhythm</th>
+            </tr>
+          </thead>
+          <tbody>{state.rhythms.map(function (rhythm, i) {
+            var beats = self.getBeats(rhythm);
+            return (
+              <tr key={i}>
+                <td className="col-xs-1">
+                  <button name={'removeRhythm-'+i} type="button" className="btn btn-danger" onClick={self.removeRhythm}>
+                    <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                  </button>
+                </td>
+                <td><input type="number" step="1" onChange={self.onChange} className="form-control" name={'onNotes-'+i}    value={rhythm.onNotes}    min="0"              max={rhythm.totalNotes} /></td>
+                <td><input type="number" step="1" onChange={self.onChange} className="form-control" name={'totalNotes-'+i} value={rhythm.totalNotes} min={rhythm.onNotes} max="64" /></td>
+                <td className="text-center">
+                  <DoughnutChart redraw
+                    width={pieOpts.width}
+                    height={pieOpts.height}
+                    data={beats.map(function (beat, i) {
+                      return {
+                        value: 1,
+                        color: state.state === 'play' && (state.rhythmIndex % beats.length) === i
+                          ? pieOpts.playColor
+                          : beat
+                            ? pieOpts.onColor
+                            : pieOpts.offColor
+                      };
+                    })}
+                    options={pieOpts.doughnutChartOptions} />
+                </td>
+              </tr>
+            );
+          })}</tbody>
+        </table>
       </div>
     );
   }
