@@ -6,8 +6,9 @@ var euclideanRhythm = require('./.');
 
 var EuclideanRhythmDemo = React.createClass({
   getInitialState: function () {
-    var size = 120;
-    var radius = Math.min(size, size) / 2;
+    var width = 120;
+    var height = 120;
+    var radius = Math.min(width, height) / 2;
     return {
       onNotes: 3,
       totalNotes: 8,
@@ -25,8 +26,8 @@ var EuclideanRhythmDemo = React.createClass({
       },
 
       pieOpts: {
-        width: size,
-        height: size,
+        width: width,
+        height: height,
         radius: radius,
         outerRadius: radius*.9,
         innerRadius: radius*.8,
@@ -34,6 +35,14 @@ var EuclideanRhythmDemo = React.createClass({
         onColor: '#555',
         offColor: '#ddd',
         playColor: '#c00'
+      },
+      pieData: {
+        arc: d3.svg.arc()
+          .outerRadius(radius*.9)
+          .innerRadius(radius*.8),
+        pie: d3.layout.pie()
+          .sort(null)
+          .value(function (d, i) { return 1; })
       }
     };
   },
@@ -42,17 +51,13 @@ var EuclideanRhythmDemo = React.createClass({
     var state = self.state;
 
     var pieOpts = state.pieOpts;
-    self.setState({
-      arc: d3.svg.arc()
-        .outerRadius(pieOpts.radius*.9)
-        .innerRadius(pieOpts.radius*.8),
-      pie: d3.layout.pie()
-        .sort(null)
-        .value(function (d, i) { return 1; }),
-      svg: d3.select(ReactDOM.findDOMNode(self)).append('svg').append('g')
-        .attr('class', 'beats')
-        .attr('transform', 'translate(' + (pieOpts.width/2) + ',' + (pieOpts.height/2) + ')')
-    });
+    state.pieData.d3 = d3.select(self.refs.pie).append('svg')
+      .attr('width', pieOpts.width)
+      .attr('height', pieOpts.height)
+    .append('g')
+      .attr('class', 'beats')
+      .attr('transform', 'translate(' + (pieOpts.width/2) + ',' + (pieOpts.height/2) + ')');
+    self.setState({pieData: state.pieData});
 
     var midiOpts = state.midiOpts;
     MIDI.loadPlugin({
@@ -113,9 +118,10 @@ var EuclideanRhythmDemo = React.createClass({
     var self = this;
     var state = self.state;
     var pieOpts = state.pieOpts;
+    var pieData = state.pieData;
 
-    var slice = state.svg.selectAll('.beat')
-      .data(state.pie(self.getRhythm()));
+    var slice = pieData.d3.selectAll('.beat')
+      .data(pieData.pie(self.getRhythm()));
 
     slice.enter()
       .insert('path')
@@ -126,7 +132,7 @@ var EuclideanRhythmDemo = React.createClass({
       .attrTween('d', function (d) {
         var interpolate = d3.interpolate(this._current || d, d);
         this._current = interpolate(0);
-        return function (t) { return state.arc(interpolate(t)); };
+        return function (t) { return pieData.arc(interpolate(t)); };
       })
 
     slice.exit()
@@ -142,21 +148,25 @@ var EuclideanRhythmDemo = React.createClass({
   },
   render: function () {
     return (
-      <form>
-        <div className="form-group">
+      <div className="row">
+        <div className="col-xs-4">
           <label htmlFor="onNotes">On notes</label>
           <input name="onNotes" value={this.state.onNotes} onChange={this.onChange} type="number" step="1" min="0" max={this.state.totalNotes} id="onNotes" className="form-control" />
           <p className="help-block">Total number of notes that will be played in the measure.</p>
         </div>
-        <div className="form-group">
+        <div className="col-xs-4">
           <label htmlFor="totalNotes">Total notes</label>
           <input name="totalNotes" value={this.state.totalNotes} onChange={this.onChange} type="number" step="1" min={this.state.onNotes} max="64" id="totalNotes" className="form-control" />
           <p className="help-block">Total number of notes in a measure.</p>
         </div>
-        <button type="button" className="btn btn-primary btn-small" onClick={this.toggle}>
-          <span className={'glyphicon glyphicon-'+this.getNextState()} aria-hidden="true"></span>
-        </button>
-      </form>
+        <div className="col-xs-4">
+          <label htmlFor="play">Rhythm</label>
+          <button type="button" className="btn btn-block btn-primary" onClick={this.toggle} id="play">
+            <span className={'glyphicon glyphicon-'+this.getNextState()} aria-hidden="true"></span>
+          </button>
+          <div ref="pie" className="text-center"></div>
+        </div>
+      </div>
     );
   }
 });
