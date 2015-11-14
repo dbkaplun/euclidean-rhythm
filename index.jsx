@@ -14,12 +14,15 @@ var EuclideanRhythmDemo = React.createClass({
       state: 'stop',
       rhythmIndex: 0,
 
-      // MIDI options
-      volume: 127,
-      channel: 0,
-      note: 50,
-      velocity: 127,
-      duration: .25,
+      midiOpts: {
+        soundfontUrl: 'node_modules/midi/examples/soundfont/',
+        instrument: 'acoustic_grand_piano',
+        volume: 127,
+        channel: 0,
+        note: 50,
+        velocity: 127,
+        duration: .25,
+      },
 
       pieOpts: {
         width: size,
@@ -51,12 +54,13 @@ var EuclideanRhythmDemo = React.createClass({
         .attr('transform', 'translate(' + (pieOpts.width/2) + ',' + (pieOpts.height/2) + ')')
     });
 
+    var midiOpts = state.midiOpts;
     MIDI.loadPlugin({
-      soundfontUrl: "node_modules/midi/examples/soundfont/",
-      instrument: "acoustic_grand_piano",
+      soundfontUrl: midiOpts.soundfontUrl,
+      instrument: midiOpts.instrument,
       onprogress: console.log.bind(console),
       onsuccess: function () {
-        MIDI.setVolume(state.channel, state.volume);
+        MIDI.setVolume(midiOpts.channel, midiOpts.volume);
         self.setState({midi: MIDI});
       }
     });
@@ -72,24 +76,30 @@ var EuclideanRhythmDemo = React.createClass({
     }[this.state.state];
   },
   play: function () {
-    if (this.getRhythm()[this.state.rhythmIndex]) {
-      MIDI.noteOn(this.state.channel, this.state.note, this.state.velocity, 0);
-      MIDI.noteOff(this.state.channel, this.state.note, this.state.duration);
+    var self = this;
+    var state = self.state;
+    var midiOpts = state.midiOpts;
+    if (self.getRhythm()[state.rhythmIndex]) {
+      MIDI.noteOn(midiOpts.channel, midiOpts.note, midiOpts.velocity, 0);
+      MIDI.noteOff(midiOpts.channel, midiOpts.note, midiOpts.duration);
     }
-    this.render();
-    this.setState({
+    self.render();
+    self.setState({
       state: 'play',
-      rhythmIndex: (this.state.rhythmIndex + 1) % this.state.totalNotes,
-      timeout: setTimeout(this.play, this.state.duration * 1000)
+      rhythmIndex: (state.rhythmIndex + 1) % state.totalNotes,
+      playTimeout: setTimeout(self.play, midiOpts.duration * 1000)
     });
   },
   stop: function () {
-    MIDI.noteOff(this.state.channel, this.state.note, 0);
-    clearTimeout(this.state.timeout);
-    this.setState({
+    var self = this;
+    var state = self.state;
+    var midiOpts = state.midiOpts;
+    MIDI.noteOff(midiOpts.channel, midiOpts.note, 0);
+    clearTimeout(state.playTimeout);
+    self.setState({
       state: 'stop',
       rhythmIndex: 0,
-      timeout: null
+      playTimeout: null
     });
   },
   toggle: function (evt) { this[this.getNextState()](); },
