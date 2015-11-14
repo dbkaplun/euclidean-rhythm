@@ -1,6 +1,6 @@
 module.exports = function (onNotes, totalNotes) {
   var groups = [];
-  for (var i = 0; i < totalNotes; i++) groups.push([i < onNotes]);
+  for (var i = 0; i < totalNotes; i++) groups.push([Number(i < onNotes)]);
 
   var l;
   while (l = groups.length - 1) {
