@@ -20,5 +20,5 @@
 > var euclideanRhythm = require('euclidean-rhythm');
 undefined
 > euclideanRhythm(3, 8);
-[ true, false, false, true, false, false, true, false ]
+[ 1, 0, 0, 1, 0, 0, 1, 0 ]
 ```
