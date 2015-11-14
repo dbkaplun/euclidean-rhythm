@@ -13,7 +13,7 @@ var EuclideanRhythmDemo = React.createClass({
       onNotes: 3,
       totalNotes: 8,
       state: 'stop',
-      rhythmIndex: 0,
+      rhythmIndex: -1,
 
       midiOpts: {
         soundfontUrl: 'node_modules/midi/examples/soundfont/',
@@ -22,7 +22,7 @@ var EuclideanRhythmDemo = React.createClass({
         channel: 0,
         note: 50,
         velocity: 127,
-        duration: .25,
+        duration: .2,
       },
 
       pieOpts: {
@@ -80,19 +80,23 @@ var EuclideanRhythmDemo = React.createClass({
       play: 'stop'
     }[this.state.state];
   },
-  play: function () {
+  playNote: function () {
     var self = this;
     var state = self.state;
     var midiOpts = state.midiOpts;
+
+    state.rhythmIndex = (state.rhythmIndex + 1) % state.totalNotes;
+    self.setState({rhythmIndex: state.rhythmIndex});
     if (self.getRhythm()[state.rhythmIndex]) {
       MIDI.noteOn(midiOpts.channel, midiOpts.note, midiOpts.velocity, 0);
       MIDI.noteOff(midiOpts.channel, midiOpts.note, midiOpts.duration);
     }
-    self.render();
-    self.setState({
+  },
+  play: function () {
+    this.playNote();
+    this.setState({
       state: 'play',
-      rhythmIndex: (state.rhythmIndex + 1) % state.totalNotes,
-      playTimeout: setTimeout(self.play, midiOpts.duration * 1000)
+      playInterval: setInterval(this.playNote, this.state.midiOpts.duration * 1000)
     });
   },
   stop: function () {
@@ -100,11 +104,11 @@ var EuclideanRhythmDemo = React.createClass({
     var state = self.state;
     var midiOpts = state.midiOpts;
     MIDI.noteOff(midiOpts.channel, midiOpts.note, 0);
-    clearTimeout(state.playTimeout);
+    clearInterval(state.playInterval);
     self.setState({
       state: 'stop',
-      rhythmIndex: 0,
-      playTimeout: null
+      rhythmIndex: -1,
+      playInterval: null
     });
   },
   toggle: function (evt) { this[this.getNextState()](); },
