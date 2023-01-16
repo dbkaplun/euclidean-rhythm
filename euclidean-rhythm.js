@@ -1,27 +1,45 @@
 module.exports = function (onNotes, totalNotes) {
-  var groups = [];
-  for (var i = 0; i < totalNotes; i++) groups.push([Number(i < onNotes)]);
-
-  var l;
-  while (l = groups.length - 1) {
-    var start = 0, first = groups[0];
-    while (start < l && compareArrays(first, groups[start])) start++;
-    if (start === l) break;
-
-    var end = l, last = groups[l];
-    while (end > 0 && compareArrays(last, groups[end])) end--;
-    if (end === 0) break;
-
-    var count = Math.min(start, l - end);
-    groups = groups
-      .slice(0, count)
-      .map(function (group, i) { return group.concat(groups[l - i]); })
-      .concat(groups.slice(count, -count));
+  if (onNotes > totalNotes) {
+    throw new Error('on notes cannot be greater than number of notes');
   }
-  return [].concat.apply([], groups);
-};
 
-function compareArrays (a, b) {
-  // TODO: optimize
-  return JSON.stringify(a) === JSON.stringify(b);
-};
+  // Run the Euclid algorithm and store all the intermediate results.
+  var counts = [];
+  var remainders = [onNotes];
+  var divisor = totalNotes - onNotes;
+  var level = 0;
+  while (true) {
+    counts.push(Math.floor(divisor / remainders[level]));
+    remainders.push(divisor % remainders[level]);
+    divisor = remainders[level];
+    level++;
+    if (remainders[level] <= 1) {
+      break;
+    }
+  }
+  counts.push(divisor);
+
+  // Build out the pattern.
+  var pattern = [];
+  function build(curLevel) {
+    if (curLevel === -1) {
+      pattern.push(0);
+      return;
+    }
+    if (curLevel === -2) {
+      pattern.push(1);
+      return;
+    }
+    for (var i = 0; i < counts[curLevel]; i++) {
+      build(curLevel - 1);
+    }
+    if (remainders[curLevel] !== 0) {
+      build(curLevel - 2);
+    }
+  }
+  build(level);
+
+  // Pattern starts with a 1. Ensure that's the case.
+  var firstOnPulse = pattern.indexOf(1);
+  return pattern.slice(firstOnPulse).concat(pattern.slice(0, firstOnPulse));
+}
