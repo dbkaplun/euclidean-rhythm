@@ -2,7 +2,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var DoughnutChart = require('react-chartjs').Doughnut;
 
-var euclideanRhythm = require('./.');
+var euclideanRhythm = require('./euclidean-rhythm');
 
 var EuclideanRhythmDemo = React.createClass({
   getInitialState: function () {
